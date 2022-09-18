@@ -13,6 +13,8 @@ ln -s /config/wg0.conf /etc/wireguard/wg0.conf
 if ! grep -q 'PresharedKey' /config/templates/peer.conf; then
   sed -i 's|^Endpoint|PresharedKey = \$\(cat /config/\${PEER_ID}/presharedkey-\${PEER_ID}\)\nEndpoint|' /config/templates/peer.conf
 fi
+# Peer prefix variable
+PEER_PREFIX="ultimavpn"
 
 generate_confs () {
   mkdir -p /config/server
@@ -29,7 +31,7 @@ DUDE"
     if [[ "${i}" =~ ^[0-9]+$ ]]; then
       PEER_ID="peer${i}"
     else
-      PEER_ID="ultimavpn_${i//[^[:alnum:]_-]/}"
+      PEER_ID="${PEER_PREFIX}_${i//[^[:alnum:]_-]/}"
     fi
     mkdir -p /config/${PEER_ID}
     if [ ! -f "/config/${PEER_ID}/privatekey-${PEER_ID}" ]; then
@@ -45,7 +47,7 @@ DUDE"
     else
       for idx in {2..254}; do
         PROPOSED_IP="${INTERFACE}.${idx}"
-        if ! grep -q -R "${PROPOSED_IP}" /config/peer*/*.conf && ([ -z "${ORIG_INTERFACE}" ] || ! grep -q -R "${ORIG_INTERFACE}.${idx}" /config/peer*/*.conf); then
+        if ! grep -q -R "${PROPOSED_IP}" /config/${PEER_PREFIX}*/*.conf && ([ -z "${ORIG_INTERFACE}" ] || ! grep -q -R "${ORIG_INTERFACE}.${idx}" /config/${PEER_PREFIX}*/*.conf); then
           CLIENT_IP="${PROPOSED_IP}"
           break
         fi
